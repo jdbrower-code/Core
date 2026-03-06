@@ -6,8 +6,6 @@ Release/
 *.pdb
 *.ilk
 *.exe
-*.dll
-*.lib
 *.ipch
 *.tlog
 *.log
