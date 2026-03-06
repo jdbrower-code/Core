@@ -1,0 +1,36 @@
+# Load Outlook COM Object
+$Outlook = New-Object -ComObject Outlook.Application
+$Namespace = $Outlook.GetNamespace("MAPI")
+
+# Define the shared mailbox and folder
+$sharedMailbox = "shared@domain.com"  # Replace with your shared mailbox email
+$folderName = "Inbox"                  # Change to the desired folder
+$destinationPSTPath = "\\NetworkDrive\Archive\ArchivedEmails.pst"  # Replace with your network drive path
+
+# Access the shared mailbox folder
+$sharedFolder = $Namespace.Folders.Item($sharedMailbox).Folders.Item($folderName)
+
+# Define the cutoff date for archiving
+$cutoffDate = Get-Date "2023-01-01"  # Replace with your specific date
+
+# Create a new PST file if it doesn't exist
+if (-not (Test-Path -Path $destinationPSTPath)) {
+    $Namespace.AddStore($destinationPSTPath)
+}
+
+# Get the PST folder where emails will be stored
+$pstFolder = $Namespace.Folders.Item((Get-Item $destinationPSTPath).Name)
+
+# Loop through each email in the shared inbox
+foreach ($item in $sharedFolder.Items) {
+    if ($item -is [Microsoft.Office.Interop.Outlook.MailItem]) {
+        # Check if the email is older than the cutoff date
+        if ($item.ReceivedTime -lt $cutoffDate) {
+            # Move the email to the PST file
+            $item.Move($pstFolder)
+        }
+    }
+}
+
+# Clean up
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Outlook) | Out-Null
