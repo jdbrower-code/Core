@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\COSM_EIS_Prototype.csproj",
+      "projectUniqueName": "E:\\Core\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\COSM_EIS_Prototype.csproj",
       "projectName": "COSM_EIS_Prototype",
-      "projectPath": "E:\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\COSM_EIS_Prototype.csproj",
+      "projectPath": "E:\\Core\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\COSM_EIS_Prototype.csproj",
       "packagesPath": "C:\\Users\\Brower_Jason\\.nuget\\packages\\",
-      "outputPath": "E:\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\obj\\",
+      "outputPath": "E:\\Core\\CSharp\\COSM_EIS\\COSM_EIS_Prototype\\COSM_EIS_Prototype\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Brower_Jason\\AppData\\Roaming\\NuGet\\NuGet.Config"
