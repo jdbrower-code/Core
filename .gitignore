@@ -11,3 +11,4 @@ Release/
 *.ipch
 *.tlog
 *.log
+*.csv
