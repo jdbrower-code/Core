@@ -1,0 +1,150 @@
+//Database connection method
+
+static DatabaseService()
+{
+    using var conn = new SqlConnection("your-connection-string");
+	//TO DO
+	//Replaced with a search method that incorportates user search criteria into a where clause
+    using var cmd  = new SqlCommand("SELECT * FROM Records", conn); 
+    conn.Open();
+    var reader = cmd.ExecuteReader();
+    while (reader.Read())
+    {
+		//TO Do
+		//Update to use actual search criteria
+        _records.Add(new DataRecord
+        {
+            Id       = reader["Id"].ToString(), 
+            Name     = reader["Name"].ToString(),
+            // etc...
+        });
+    }
+}
+
+
+//Search Method
+public static List<DataRecord> Search(IEnumerable<SearchCriterion> criteria, SearchOperator op)
+{
+    var activeCriteria = criteria
+        .Where(c => !string.IsNullOrWhiteSpace(c.Value))
+        .ToList();
+
+    // Build the WHERE clause dynamically
+    var whereParts = new List<string>();
+    var parameters = new List<SqlParameter>();
+    int paramIndex = 0;
+
+    foreach (var c in activeCriteria)
+    {
+        string paramName = $"@p{paramIndex++}";
+        string condition = BuildCondition(c, paramName, parameters);
+        if (condition != null)
+            whereParts.Add(condition);
+    }
+
+    // Join with AND or OR depending on the toggle
+    string combiner = op == SearchOperator.And ? " AND " : " OR ";
+    string whereClause = whereParts.Count > 0
+        ? "WHERE " + string.Join(combiner, whereParts)
+        : "";
+
+    string sql = $"SELECT * FROM Records {whereClause}";
+
+    // Execute and read results
+    var results = new List<DataRecord>();
+    using var conn = new SqlConnection("your-connection-string");
+    using var cmd  = new SqlCommand(sql, conn);
+    cmd.Parameters.AddRange(parameters.ToArray());
+    conn.Open();
+
+    var reader = cmd.ExecuteReader();
+    while (reader.Read())
+    {
+        results.Add(new DataRecord
+        {
+            Id       = reader["Id"].ToString()!,
+            Name     = reader["Name"].ToString()!,
+            Category = reader["Category"].ToString()!,
+            Region   = reader["Region"].ToString()!,
+            Status   = reader["Status"].ToString()!,
+            Value    = Convert.ToDecimal(reader["Value"]),
+            Score    = Convert.ToInt32(reader["Score"]),
+            Date     = Convert.ToDateTime(reader["Date"])
+        });
+    }
+
+    return results;
+}
+
+//Build Construction Helper
+private static string BuildCondition(SearchCriterion c, string paramName, List<SqlParameter> parameters)
+{
+    string col = c.Field; // "Name", "Category", etc.
+
+    switch (c.Operator)
+    {
+        // Text operators
+        case "contains":
+            parameters.Add(new SqlParameter(paramName, $"%{c.Value}%"));
+            return $"{col} LIKE {paramName}";
+
+        case "not contains":
+            parameters.Add(new SqlParameter(paramName, $"%{c.Value}%"));
+            return $"{col} NOT LIKE {paramName}";
+
+        case "starts with":
+            parameters.Add(new SqlParameter(paramName, $"{c.Value}%"));
+            return $"{col} LIKE {paramName}";
+
+        case "ends with":
+            parameters.Add(new SqlParameter(paramName, $"%{c.Value}"));
+            return $"{col} LIKE {paramName}";
+
+        case "equals":
+        case "=":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} = {paramName}";
+
+        case "not equals":
+        case "≠":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} <> {paramName}";
+
+        // Numeric / date operators
+        case ">":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} > {paramName}";
+
+        case "<":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} < {paramName}";
+
+        case "≥":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} >= {paramName}";
+
+        case "≤":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} <= {paramName}";
+
+        case "before":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} < {paramName}";
+
+        case "after":
+            parameters.Add(new SqlParameter(paramName, c.Value));
+            return $"{col} > {paramName}";
+
+        case "between":
+            var parts = c.Value.Split(',');
+            if (parts.Length < 2) return null;
+            string p2 = paramName + "b";
+            parameters.Add(new SqlParameter(paramName, parts[0].Trim()));
+            parameters.Add(new SqlParameter(p2, parts[1].Trim()));
+            return $"{col} BETWEEN {paramName} AND {p2}";
+
+        default:
+            parameters.Add(new SqlParameter(paramName, $"%{c.Value}%"));
+            return $"{col} LIKE {paramName}";
+    }
+}
